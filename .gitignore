@@ -1,0 +1,5 @@
+# Don't include credentials!
+creds/*
+
+# IDE stuff
+.idea
