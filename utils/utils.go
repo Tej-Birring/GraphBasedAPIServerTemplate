@@ -5,21 +5,11 @@ import (
 	"reflect"
 )
 
-func RandomString(length int) string {
+func GetRandomString(length int) string {
 	return uniuri.NewLen(length)
 }
 
-//func SumMaps(maps ...map[interface{}]interface{}) map[interface{}]interface{} {
-//	ret := map[interface{}]interface{}{} // create new map to return
-//	for _, m := range maps {             // for each map
-//		for k, v := range m { // add key-val pair to return value
-//			ret[k] = v
-//		}
-//	}
-//	return ret // return the result
-//}
-
-func SumMaps(maps ...map[string]interface{}) map[string]interface{} {
+func AddGenericMaps(maps ...map[string]interface{}) map[string]interface{} {
 	ret := map[string]interface{}{} // create new map to return
 	for _, m := range maps {        // for each map
 		for k, v := range m { // add key-val pair to return value
@@ -29,8 +19,8 @@ func SumMaps(maps ...map[string]interface{}) map[string]interface{} {
 	return ret // return the result
 }
 
-// StructToGenericMap Takes a struct input and outputs a map[string]interface{}
-func StructToGenericMap(in interface{}) map[string]interface{} {
+// ConvertStructToGenericMap Takes a struct input and outputs a map[string]interface{}
+func ConvertStructToGenericMap(in interface{}) map[string]interface{} {
 	// TODO: Check that in is indeed a struct!
 
 	retVal := map[string]interface{}{}
@@ -58,10 +48,10 @@ func StructToGenericMap(in interface{}) map[string]interface{} {
 	return retVal
 }
 
-// StructJsonKeys Takes a struct and returns its json tags as slice of strings
+// GetJsonKeysUsedByStruct Takes a struct and returns its json tags as slice of strings
 // Current implementation assumes that the tag entry is not comma-seperated string,
 // we can cater for that when we need to use it
-func StructJsonKeys(in interface{}) []string {
+func GetJsonKeysUsedByStruct(in interface{}) []string {
 	var retVal []string
 	tStruct := reflect.TypeOf(in)
 	nKeys := tStruct.NumField()

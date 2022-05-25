@@ -86,21 +86,22 @@ func GetById(controller *Controller, labels Labels, id string) (*neo4j.Node, err
 
 func (n Node) Update(dbc *Controller, updateData map[string]interface{}) error {
 	var props Properties = updateData
-	fmt.Println("props", props)
+	//fmt.Println("props", props)
 	// produce the query
 	matchLabelsStr := n.MatchLabels.ToString("n")
 	matchPropsString := n.MatchProperties.GetMatchQueryString()
 	matchPropsParams := n.MatchProperties.GetMatchQueryParameters()
 	assignPropsString := props.GetQueryAssignString("n")
 	assignPropsParams := props.GetQueryAssignParameters()
-	queryParams := utils.SumMaps(matchPropsParams, assignPropsParams)
+	queryParams := utils.AddGenericMaps(matchPropsParams, assignPropsParams)
 	query := fmt.Sprintf("MATCH (%s {%s}) SET %s RETURN n", matchLabelsStr, matchPropsString, assignPropsString)
 	summary, err := dbc.ExecuteWriteQuery2(query, queryParams)
 	if err != nil {
 		return err
 	}
 	if summary.Counters().PropertiesSet() < 1 {
-		return errors.New("node(s) not updated")
+		return nil // don't treat this as an error
+		//return errors.New("node(s) not updated")
 	}
 	return nil
 }
@@ -114,21 +115,22 @@ func (n Node) UpdateAllowedPropsOnly(dbc *Controller, allowProperties []string, 
 			props[key] = val
 		}
 	}
-	fmt.Println("props", props)
+	//fmt.Println("props", props)
 	//produce the query
 	matchLabelsStr := n.MatchLabels.ToString("n")
 	matchPropsString := n.MatchProperties.GetMatchQueryString()
 	matchPropsParams := n.MatchProperties.GetMatchQueryParameters()
 	assignPropsString := props.GetQueryAssignString("n")
 	assignPropsParams := props.GetQueryAssignParameters()
-	queryParams := utils.SumMaps(matchPropsParams, assignPropsParams)
+	queryParams := utils.AddGenericMaps(matchPropsParams, assignPropsParams)
 	query := fmt.Sprintf("MATCH (%s {%s}) SET %s RETURN n", matchLabelsStr, matchPropsString, assignPropsString)
 	summary, err := dbc.ExecuteWriteQuery2(query, queryParams)
 	if err != nil {
 		return err
 	}
 	if summary.Counters().PropertiesSet() < 1 {
-		return errors.New("node(s) not updated")
+		return nil // don't treat this as an error
+		//return errors.New("node(s) not updated")
 	}
 	return nil
 }
@@ -181,14 +183,15 @@ func (n Node) UpdateFromString(dbc *Controller, allowProperties []UpdatablePrope
 	matchPropsParams := n.MatchProperties.GetMatchQueryParameters()
 	assignPropsString := props.GetQueryAssignString("n")
 	assignPropsParams := props.GetQueryAssignParameters()
-	queryParams := utils.SumMaps(matchPropsParams, assignPropsParams)
+	queryParams := utils.AddGenericMaps(matchPropsParams, assignPropsParams)
 	query := fmt.Sprintf("MATCH (%s {%s}) SET %s RETURN n", matchLabelsStr, matchPropsString, assignPropsString)
 	summary, err := dbc.ExecuteWriteQuery2(query, queryParams)
 	if err != nil {
 		return err
 	}
 	if summary.Counters().PropertiesSet() < 1 {
-		return errors.New("node(s) not updated")
+		return nil // don't treat this as an error
+		//return errors.New("node(s) not updated")
 	}
 	return nil
 }

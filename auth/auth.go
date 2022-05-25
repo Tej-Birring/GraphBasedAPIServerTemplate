@@ -6,11 +6,29 @@ import (
 	"crypto/sha512"
 	"encoding/base64"
 	"github.com/lestrrat-go/jwx/jwa"
+	"github.com/lestrrat-go/jwx/jwk"
 	"github.com/lestrrat-go/jwx/jwt"
+	"log"
 	"time"
 )
 
 const tokenDuration = time.Minute * 20
+
+var SigKeySetPrv jwk.Set
+var SigKeySetPub jwk.Set
+
+func InitializeAuth() {
+	var err error
+	//  load signature key sets
+	SigKeySetPrv, err = jwk.ReadFile("creds/.jwkSigPairSet.json")
+	if err != nil {
+		log.Fatal("Error loading JWK set from file.")
+	}
+	SigKeySetPub, err = jwk.PublicSetOf(SigKeySetPrv)
+	if err != nil {
+		log.Fatal("Error producing public JWK set from private one.")
+	}
+}
 
 func NewAuthToken(controller *db.Controller, id string, prvKey interface{}) ([]byte, error) {
 	n, err := db.GetById(controller, db.Labels{"User"}, id)
@@ -54,7 +72,7 @@ type salt = string
 
 // HashPasswordNewSalt mine new salt & hash the password
 func HashPasswordNewSalt(newPassword string) (salt, password) {
-	salt := utils.RandomString(256)
+	salt := utils.GetRandomString(256)
 	hasher := sha512.New()
 	hasher.Write([]byte((salt + newPassword)))
 	password := base64.RawURLEncoding.EncodeToString(hasher.Sum(nil))

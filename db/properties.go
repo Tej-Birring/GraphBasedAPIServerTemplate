@@ -2,8 +2,6 @@ package db
 
 import "reflect"
 
-//type Properties []Property
-
 type Properties map[string]interface{}
 
 /*

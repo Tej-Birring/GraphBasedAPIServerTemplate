@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/julienschmidt/httprouter"
-	"github.com/lestrrat-go/jwx/jwk"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"net/http"
 	"strings"
@@ -36,13 +35,9 @@ type UserAccountResponse struct {
 }
 
 var _dbc *db.Controller
-var _prvSigKeySet *jwk.Set
-var _pubSigKeySet *jwk.Set
 
-func HandleUserAccount(mux *httprouter.Router, dbController *db.Controller, prvSigKeySet *jwk.Set, pubSigKeySet *jwk.Set) {
+func HandleUserAccount(mux *httprouter.Router, dbController *db.Controller) {
 	_dbc = dbController
-	_prvSigKeySet = prvSigKeySet
-	_pubSigKeySet = pubSigKeySet
 	// note: handler for read not required because info available in signed JWT
 	mux.POST("/user", handleRegister) // create
 	mux.POST("/login", handleLogin)   // "read" #1 => start user session by getting JWT
@@ -104,7 +99,7 @@ func handleRegister(w http.ResponseWriter, r *http.Request, _ httprouter.Params)
 
 	salt, password := auth.HashPasswordNewSalt(_password)
 
-	id := utils.RandomString(50)
+	id := utils.GetRandomString(50)
 
 	n := db.Node{MatchLabels: db.Labels{"User"}, MatchProperties: db.Properties{
 		"id":            id,
@@ -125,7 +120,7 @@ func handleRegister(w http.ResponseWriter, r *http.Request, _ httprouter.Params)
 	}
 
 	// get token
-	prvKey, _ := (*_prvSigKeySet).Get(0)
+	prvKey, _ := auth.SigKeySetPrv.Get(0)
 	signedTkn, err := auth.NewAuthToken(_dbc, id, prvKey)
 	if err != nil {
 		respondWithUserAccountError(w, http.StatusInternalServerError, err.Error(), "Something went wrong while we were trying to register your account. Please contact us directly to resolve this issue.")
@@ -164,7 +159,7 @@ var handleUpdate = NewAuthHandle(func(tknData *map[string]interface{}, userId st
 	}
 
 	// using JSON, omit fields that can not be nullified/deleted/unset once they've been set (during creation/update)
-	nonNullableKeys := utils.StructJsonKeys(tmp)
+	nonNullableKeys := utils.GetJsonKeysUsedByStruct(tmp)
 	for _, jsonKey := range nonNullableKeys {
 		if val, ok := req[jsonKey]; ok {
 			if val == nil {
@@ -267,7 +262,7 @@ func handleLogin(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		respondWithUserAccountError(w, http.StatusInternalServerError, "Error parsing id retrieved from user node.", "Something went wrong while we were trying to log you in. Please contact us directly to resolve this issue.")
 		return
 	}
-	prvKey, _ := (*_prvSigKeySet).Get(0)
+	prvKey, _ := auth.SigKeySetPrv.Get(0)
 	signedTkn, err := auth.NewAuthToken(_dbc, userId, prvKey)
 	if err != nil {
 		respondWithUserAccountError(w, http.StatusInternalServerError, err.Error(), "Something went wrong while we were trying to log you in. Please contact us directly to resolve this issue.")

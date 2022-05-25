@@ -31,7 +31,7 @@ type AuthHandleResponse struct {
 
 func NewAuthHandleSuccessResponse(userId string, data interface{}, userMessage string) AuthHandleResponse {
 	// generate new token for the user — TODO handle error
-	prvSigKey, _ := (*_prvSigKeySet).Get(0)
+	prvSigKey, _ := auth.SigKeySetPrv.Get(0)
 	newTkn, err := auth.NewAuthToken(_dbc, userId, prvSigKey)
 	if err != nil {
 		return NewAuthHandleErrorResponse(true, true, http.StatusInternalServerError, "Couldn't generate new token for this user session: "+err.Error(), "Failed to maintain your session. Please contact us directly to resolve this issue.")
@@ -70,7 +70,7 @@ func NewAuthHandle(work AuthHandleWork) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		w.Header().Set("Content-Type", "application/json")
 
-		pubKey, _ := (*_pubSigKeySet).Get(0)
+		pubKey, _ := auth.SigKeySetPub.Get(0)
 		tkn, err := jwt.ParseRequest(r, jwt.WithVerify(jwa.RS512, pubKey)) //jwt.WithValidate(true)
 		if err != nil {
 			log.Printf("Token verification failed: %s\n", err)
