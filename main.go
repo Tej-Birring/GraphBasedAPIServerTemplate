@@ -1,6 +1,8 @@
 package main
 
 import (
+	"HayabusaBackend/db"
+	"HayabusaBackend/httpControllers"
 	"fmt"
 	"github.com/joho/godotenv"
 	"github.com/julienschmidt/httprouter"
@@ -44,13 +46,13 @@ func main() {
 	}
 
 	// Initialize driver for DB communication
-	dbDriver := InitializeDB()
+	dbController := db.InitializeDB()
 
 	// CREATE SERVER
 	mux := httprouter.New()
 	// handle routes
 	mux.GET("/", Index)
-	HandleUsers(mux, &dbDriver, &sigKeySetPrv, &sigKeySetPub)
+	httpControllers.HandleUserAccount(mux, &dbController, &sigKeySetPrv, &sigKeySetPub)
 
 	// START SERVER
 	log.Printf("Serving HTTP on port %s...\n", portStr)
