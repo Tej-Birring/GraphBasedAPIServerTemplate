@@ -21,20 +21,22 @@ func NewAuthToken(controller *db.Controller, id string, prvKey interface{}) ([]b
 	// produce the token
 	timeNow := time.Now()
 	timeExpire := timeNow.Add(tokenDuration)
-	tkn, err := jwt.NewBuilder().
+	tknBuilder := jwt.NewBuilder().
 		Issuer("Hayabusa API Server").
 		IssuedAt(timeNow).
 		Audience([]string{"Hayabusa App User"}).
 		Subject("Hayabusa Client-Side App").
-		Expiration(timeExpire).
-		Claim("id", user["id"]).
-		Claim("firstName", user["firstName"]).
-		Claim("lastName", user["lastName"]).
-		Claim("phone", user["phone"]).
-		Claim("email", user["email"]).
-		Claim("phoneVerified", user["phoneVerified"]).
-		Claim("emailVerified", user["emailVerified"]).
-		Build()
+		Expiration(timeExpire)
+
+	// append all user props apart from password and salt
+	for k, v := range user {
+		if k == "password" || k == "salt" {
+			continue
+		}
+		tknBuilder.Claim(k, v)
+	}
+
+	tkn, err := tknBuilder.Build()
 	if err != nil {
 		return nil, err
 	}

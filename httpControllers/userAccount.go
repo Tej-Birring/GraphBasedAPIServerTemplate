@@ -169,9 +169,7 @@ var handleUpdate = NewAuthHandle(func(tknData *map[string]interface{}, userId st
 
 	n := db.Node{MatchLabels: []string{"User"}}
 
-	// list of props specified just in case weird things inserted — though that might be useful from client-side app perspective!
-	// i.e. additional user info, e.g.: profile pic,
-	err = n.UpdateAllowedPropsOnly(_dbc, []string{"phone", "email", "firstName", "lastName", "phoneVerified", "emailVerified", "salt", "password"}, req)
+	err = n.Update(_dbc, req)
 	if err != nil {
 		return NewAuthHandleErrorResponse(true, false, http.StatusInternalServerError, err.Error(), "Something went wrong while we were trying to update your account. Please contact us directly to resolve this issue.")
 	}
