@@ -4,22 +4,25 @@ import (
 	"HayabusaBackend/auth"
 	"HayabusaBackend/db"
 	"HayabusaBackend/utils"
+	"bytes"
 	"encoding/json"
 	"github.com/julienschmidt/httprouter"
 	"github.com/lestrrat-go/jwx/jwk"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"net/http"
+	"strings"
 )
 
 // UserAccountRequest Only used for conversion from JSON request body into local vars, and documentation purposes
+// these fields, once set, can not be nullified/deleted/unset, only the value can be updated
 type UserAccountRequest struct {
-	Email         string `json:"email,omitempty"`
-	Phone         string `json:"phone,omitempty"`
-	Password      string `json:"password,omitempty"`
-	FirstName     string `json:"firstName,omitempty"`
-	LastName      string `json:"lastName,omitempty"`
-	PhoneVerified bool   `json:"phoneVerified,omitempty"`
-	EmailVerified bool   `json:"emailVerified,omitempty"`
+	Email         string `json:"email"`
+	Phone         string `json:"phone"`
+	Password      string `json:"password"`
+	FirstName     string `json:"firstName"`
+	LastName      string `json:"lastName"`
+	PhoneVerified bool   `json:"phoneVerified"`
+	EmailVerified bool   `json:"emailVerified"`
 }
 
 // UserAccountResponse Is used to standardize the output/response from this section of the API
@@ -79,16 +82,6 @@ func respondWithUserAccountError(w http.ResponseWriter, httpStatusCode int, reas
 }
 
 func handleRegister(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	//err := r.ParseForm()
-	//if err != nil {
-	//	respondWithUserAccountError(w, http.StatusInternalServerError, err.Error(), "Something went wrong while we were trying to register your account. Please contact us directly to resolve this issue.")
-	//	return
-	//}
-	//
-	//// make sure email|phone & password
-	//_email := r.PostFormValue("email")
-	//_phone := r.PostFormValue("phone")
-	//_password := r.PostFormValue("password")
 	req := UserAccountRequest{}
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
@@ -144,13 +137,41 @@ func handleRegister(w http.ResponseWriter, r *http.Request, _ httprouter.Params)
 }
 
 var handleUpdate = NewAuthHandle(func(tknData *map[string]interface{}, userId string, r *http.Request, p httprouter.Params) AuthHandleResponse {
+	buff := bytes.Buffer{}
+	_, err := buff.ReadFrom(r.Body)
+	if err != nil {
+		return NewAuthHandleErrorResponse(true, false, http.StatusBadRequest, err.Error(), "Something went wrong while we were trying to update your account. Please contact us directly to resolve this issue.")
+	}
+
 	// We don't use the struct because we only want to update the variables specified in the request
 	// If we parse struct, we are forced to update all, or omit zero values — even if the request
 	// intended to set the property to a zero value!
 	req := map[string]interface{}{}
-	err := json.NewDecoder(r.Body).Decode(&req)
+	err = json.Unmarshal(buff.Bytes(), &req)
 	if err != nil {
 		return NewAuthHandleErrorResponse(true, false, http.StatusBadRequest, err.Error(), "Something went wrong while we were trying to update your account. Please contact us directly to resolve this issue.")
+	}
+
+	// omit fields that can only be set by this server
+	delete(req, "id")
+	delete(req, "salt")
+
+	// parse to JSON *only* to check input is of correct type for important fields, and below
+	tmp := UserAccountRequest{}
+	err = json.Unmarshal(buff.Bytes(), &tmp)
+	if err != nil {
+		return NewAuthHandleErrorResponse(true, false, http.StatusBadRequest, err.Error(), "Something went wrong while we were trying to update your account. Please contact us directly to resolve this issue.")
+	}
+
+	// using JSON, omit fields that can not be nullified/deleted/unset once they've been set (during creation/update)
+	nonNullableKeys := utils.StructJsonKeys(tmp)
+	for _, jsonKey := range nonNullableKeys {
+		if val, ok := req[jsonKey]; ok {
+			if val == nil {
+				//delete(req, jsonKey)
+				return NewAuthHandleErrorResponse(true, false, http.StatusBadRequest, "Attempted to delete one or more of the following non-nullable fields: "+strings.Join(nonNullableKeys, ", "), "Something went wrong while we were trying to update your account. Please contact us directly to resolve this issue.")
+			}
+		}
 	}
 
 	// if request specifies a password change, we need to process it i.e. produce salt + hash
@@ -167,7 +188,7 @@ var handleUpdate = NewAuthHandle(func(tknData *map[string]interface{}, userId st
 		req["password"] = password
 	}
 
-	n := db.Node{MatchLabels: []string{"User"}}
+	n := db.Node{db.Labels{"User"}, db.Properties{"id": userId}}
 
 	err = n.Update(_dbc, req)
 	if err != nil {

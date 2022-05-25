@@ -29,7 +29,10 @@ func SumMaps(maps ...map[string]interface{}) map[string]interface{} {
 	return ret // return the result
 }
 
+// StructToGenericMap Takes a struct input and outputs a map[string]interface{}
 func StructToGenericMap(in interface{}) map[string]interface{} {
+	// TODO: Check that in is indeed a struct!
+
 	retVal := map[string]interface{}{}
 
 	v := reflect.ValueOf(in)
@@ -48,9 +51,23 @@ func StructToGenericMap(in interface{}) map[string]interface{} {
 		//if v.Field(i).IsZero() {
 		//	continue
 		//}
-		
+
 		retVal[key] = val
 	}
 
+	return retVal
+}
+
+// StructJsonKeys Takes a struct and returns its json tags as slice of strings
+// Current implementation assumes that the tag entry is not comma-seperated string,
+// we can cater for that when we need to use it
+func StructJsonKeys(in interface{}) []string {
+	var retVal []string
+	tStruct := reflect.TypeOf(in)
+	nKeys := tStruct.NumField()
+	for i := 0; i < nKeys; i++ {
+		tagVal := tStruct.Field(i).Tag.Get("json")
+		retVal = append(retVal, tagVal)
+	}
 	return retVal
 }
