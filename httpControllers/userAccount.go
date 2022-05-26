@@ -3,6 +3,7 @@ package httpControllers
 import (
 	"HayabusaBackend/auth"
 	"HayabusaBackend/db"
+	. "HayabusaBackend/httpMiddleware"
 	"HayabusaBackend/utils"
 	"bytes"
 	"encoding/json"
@@ -36,16 +37,16 @@ type UserAccountResponse struct {
 
 var _dbc *db.Controller
 
+/*
+	HandleUserAccount
+	Note: handler for read not required because info available in signed JWT
+*/
 func HandleUserAccount(mux *httprouter.Router, dbController *db.Controller) {
 	_dbc = dbController
-	// note: handler for read not required because info available in signed JWT
-	mux.POST("/user", handleRegister) // create
-	mux.POST("/login", handleLogin)   // "read" #1 => start user session by getting JWT
-	//mux.GET("/user", handleIsAuthTokenValid)	// "read" #2 => get status of JWT
-	mux.PATCH("/user", handleUpdate)       // update
-	mux.POST("/user/delete", handleDelete) // delete, DELETE doesn't seem to be include form data in some API clients
-	//mux.GET("/user/resetPassword", handleSendResetPasswordInstructions)
-	//mux.POST("/user/resetPassword", handleResetPassword)
+	mux.POST("/user", JSONOnly(handleRegister))      // create
+	mux.POST("/login", JSONOnly(handleRegister))     // "read" #1 => start user session by getting JWT
+	mux.PATCH("/user", JSONOnly(handleUpdate))       // update
+	mux.POST("/user/delete", JSONOnly(handleDelete)) // delete, DELETE doesn't seem to be include form data in some API clients
 }
 
 func respondWithUserAccountSuccess(w http.ResponseWriter, signedTkn []byte, userMessage string) {
@@ -58,7 +59,6 @@ func respondWithUserAccountSuccess(w http.ResponseWriter, signedTkn []byte, user
 		userMessage,
 	}
 	w.WriteHeader(response.HttpStatusCode)
-	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
 
@@ -72,7 +72,6 @@ func respondWithUserAccountError(w http.ResponseWriter, httpStatusCode int, reas
 		userMessage,
 	}
 	w.WriteHeader(response.HttpStatusCode)
-	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
 
@@ -190,7 +189,7 @@ var handleUpdate = NewAuthHandle(func(tknData *map[string]interface{}, userId st
 		return NewAuthHandleErrorResponse(true, false, http.StatusInternalServerError, err.Error(), "Something went wrong while we were trying to update your account. Please contact us directly to resolve this issue.")
 	}
 
-	return NewAuthHandleSuccessResponse(userId, nil, "Account updated successfully.")
+	return NewAuthHandleSuccessResponse(_dbc, userId, nil, "Account updated successfully.")
 })
 
 func handleLogin(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {

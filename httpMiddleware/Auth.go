@@ -1,7 +1,8 @@
-package httpControllers
+package httpMiddleware
 
 import (
 	"HayabusaBackend/auth"
+	"HayabusaBackend/db"
 	"encoding/json"
 	"github.com/julienschmidt/httprouter"
 	"github.com/lestrrat-go/jwx/jwa"
@@ -29,10 +30,10 @@ type AuthHandleResponse struct {
 	Data                interface{}
 }
 
-func NewAuthHandleSuccessResponse(userId string, data interface{}, userMessage string) AuthHandleResponse {
+func NewAuthHandleSuccessResponse(dbc *db.Controller, userId string, data interface{}, userMessage string) AuthHandleResponse {
 	// generate new token for the user — TODO handle error
 	prvSigKey, _ := auth.SigKeySetPrv.Get(0)
-	newTkn, err := auth.NewAuthToken(_dbc, userId, prvSigKey)
+	newTkn, err := auth.NewAuthToken(dbc, userId, prvSigKey)
 	if err != nil {
 		return NewAuthHandleErrorResponse(true, true, http.StatusInternalServerError, "Couldn't generate new token for this user session: "+err.Error(), "Failed to maintain your session. Please contact us directly to resolve this issue.")
 	}
