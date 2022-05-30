@@ -1,5 +1,8 @@
 # Don't include credentials!
-creds/*
+configs/*
 
 # IDE stuff
 .idea
+
+# OS stuff
+.DS_Store

@@ -1,18 +1,19 @@
 package auth
 
 import (
-	"HayabusaBackend/db"
-	"HayabusaBackend/utils"
+	"GraphBasedServer/configs"
+	"GraphBasedServer/db"
+	"GraphBasedServer/utils"
 	"crypto/sha512"
 	"encoding/base64"
 	"github.com/lestrrat-go/jwx/jwa"
 	"github.com/lestrrat-go/jwx/jwk"
 	"github.com/lestrrat-go/jwx/jwt"
-	"log"
+	"os"
 	"time"
 )
 
-const tokenDuration = time.Minute * 20
+var authTokenDuration time.Duration
 
 var SigKeySetPrv jwk.Set
 var SigKeySetPub jwk.Set
@@ -20,13 +21,18 @@ var SigKeySetPub jwk.Set
 func InitializeAuth() {
 	var err error
 	//  load signature key sets
-	SigKeySetPrv, err = jwk.ReadFile("creds/.jwkSigPairSet.json")
+	SigKeySetPrv, err = jwk.ReadFile("configs/.jwkSigPairSet.json")
 	if err != nil {
-		log.Fatal("Error loading JWK set from file.")
+		panic("Error loading JWK set from file.")
 	}
 	SigKeySetPub, err = jwk.PublicSetOf(SigKeySetPrv)
 	if err != nil {
-		log.Fatal("Error producing public JWK set from private one.")
+		panic("Error producing public JWK set from private one.")
+	}
+	// define token
+	authTokenDuration = time.Minute * time.Duration(configs.Configs.AuthTokenValidForMins)
+	if authTokenDuration < time.Minute {
+		panic("Invalid VERIFICATION_CODE_VALID_FOR_MINS. Please check env!")
 	}
 }
 
@@ -38,12 +44,12 @@ func NewAuthToken(controller *db.Controller, id string, prvKey interface{}) ([]b
 	user := n.Props
 	// produce the token
 	timeNow := time.Now()
-	timeExpire := timeNow.Add(tokenDuration)
+	timeExpire := timeNow.Add(authTokenDuration)
 	tknBuilder := jwt.NewBuilder().
-		Issuer("Hayabusa API Server").
+		Issuer(os.Getenv("APP_NAME") + " API Server").
 		IssuedAt(timeNow).
-		Audience([]string{"Hayabusa App User"}).
-		Subject("Hayabusa Client-Side App").
+		Audience([]string{os.Getenv("APP_NAME") + " App User"}).
+		Subject(os.Getenv("APP_NAME") + " Client-Side App").
 		Expiration(timeExpire)
 
 	// append all user props apart from password and salt

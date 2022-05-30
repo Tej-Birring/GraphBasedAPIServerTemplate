@@ -1,10 +1,10 @@
 package httpControllers
 
 import (
-	"HayabusaBackend/auth"
-	"HayabusaBackend/db"
-	. "HayabusaBackend/httpMiddleware"
-	"HayabusaBackend/utils"
+	"GraphBasedServer/auth"
+	"GraphBasedServer/db"
+	. "GraphBasedServer/httpMiddleware"
+	"GraphBasedServer/utils"
 	"bytes"
 	"encoding/json"
 	"github.com/julienschmidt/httprouter"
@@ -41,12 +41,13 @@ var _dbc *db.Controller
 	HandleUserAccount
 	Note: handler for read not required because info available in signed JWT
 */
-func HandleUserAccount(mux *httprouter.Router, dbController *db.Controller) {
+func HandleUserLogin(mux *httprouter.Router, dbController *db.Controller) {
 	_dbc = dbController
 	mux.POST("/user", JSONOnly(handleRegister))      // create
-	mux.POST("/login", JSONOnly(handleRegister))     // "read" #1 => start user session by getting JWT
-	mux.PATCH("/user", JSONOnly(handleUpdate))       // update
-	mux.POST("/user/delete", JSONOnly(handleDelete)) // delete, DELETE doesn't seem to be include form data in some API clients
+	mux.POST("/login", JSONOnly(handleLogin))        // "read" #1 => starts user session by getting JWT (with expiry)
+	mux.GET("/login", JSONOnly(handleRefreshToken))  // "read" #2 => refreshes user session by getting new JWT (prevent session expiry)
+	mux.PATCH("/user", JSONOnly(handleUpdate))       // update user data
+	mux.POST("/user/delete", JSONOnly(handleDelete)) // delete user, POST method used because DELETE doesn't seem to include form data in some API clients — and password is required
 }
 
 func respondWithUserAccountSuccess(w http.ResponseWriter, signedTkn []byte, userMessage string) {
@@ -269,6 +270,10 @@ func handleLogin(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	}
 	respondWithUserAccountSuccess(w, signedTkn, "Login successful!")
 }
+
+var handleRefreshToken = NewAuthHandle(func(tknData *map[string]interface{}, userId string, r *http.Request, p httprouter.Params) AuthHandleResponse {
+	return NewAuthHandleSuccessResponse(_dbc, userId, nil, "Token refresh successful!")
+})
 
 var handleDelete = NewAuthHandle(func(tknData *map[string]interface{}, userId string, r *http.Request, p httprouter.Params) AuthHandleResponse {
 	req := UserAccountRequest{}

@@ -1,8 +1,8 @@
 package httpMiddleware
 
 import (
-	"HayabusaBackend/auth"
-	"HayabusaBackend/db"
+	"GraphBasedServer/auth"
+	"GraphBasedServer/db"
 	"encoding/json"
 	"github.com/julienschmidt/httprouter"
 	"github.com/lestrrat-go/jwx/jwa"

@@ -1,4 +1,4 @@
-module HayabusaBackend
+module GraphBasedServer
 
 go 1.15
 
@@ -10,5 +10,6 @@ require (
 	github.com/lestrrat-go/blackmagic v1.0.1 // indirect
 	github.com/lestrrat-go/iter v1.0.2 // indirect
 	github.com/lestrrat-go/jwx v1.2.24
+	github.com/mailjet/mailjet-apiv3-go v0.0.0-20201009050126-c24bc15a9394
 	github.com/neo4j/neo4j-go-driver/v4 v4.3.6
 )
