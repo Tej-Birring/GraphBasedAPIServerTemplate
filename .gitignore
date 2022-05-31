@@ -6,3 +6,6 @@ configs/*
 
 # OS stuff
 .DS_Store
+
+# Built executable
+GraphBasedServer
