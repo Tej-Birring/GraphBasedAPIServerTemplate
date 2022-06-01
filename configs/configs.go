@@ -24,7 +24,7 @@ func InitializeConfigs() {
 	// Load credential from environment vars
 	err := godotenv.Load("configs/.env")
 	if err != nil {
-		log.Fatal("Error loading .env file.")
+		log.Println("Could not find .env file. Assuming environment variables have already been set...")
 	}
 
 	// Read configs from JSON

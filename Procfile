@@ -1,1 +1,1 @@
-web: go clean && go build && ./GraphBasedServer
+web: GraphBasedServer
