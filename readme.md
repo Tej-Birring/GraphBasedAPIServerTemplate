@@ -31,49 +31,18 @@
    - MAILJET_SECRET_KEY — To use Mailjet to send emails. Obtain from web console.
    - TWILIO_ACCOUNT_SID — To use Twilio to send SMS. Obtain from web console.
    - TWILIO_AUTH_TOKEN — To use Twilio to send SMS. Obtain from web console.
-4. Create a `configs.go` file in `./configs`, paste the following:
+4. Create a `.configs.json` file in `./configs`, paste the following, then enter your own values:
 
 ```
-package configs
-
-import (
-	"github.com/joho/godotenv"
-	"log"
-	"os"
-)
-
-var Configs = struct {
-	TwilioPhoneNumber            string
-	AuthTokenValidForMins        int
-	VerificationCodeValidForMins int
-	AppName                      string
-	EmailFromAddress             string
-	EmailFromName                string
-	VerificationEmailTemplateId  int
-	Port                         int
-}{
-	"<Twilio phone number here>",
-	20,
-	10,
-	"<App name here, spaces allowed>",
-	"<From email address>",
-	"<From email name>",
-	<Mailjet template ID for verification email>
-	8080,
-}
-
-func InitializeConfigs() {
-	// Load environment vars
-	err := godotenv.Load("configs/.env")
-	if err != nil {
-		log.Fatal("Error loading .env file.")
-	}
-
-	// Use port 80 if RUN_IN_PRODUCTION is defined in env
-	productionMode := os.Getenv("RUN_IN_PRODUCTION")
-	if productionMode == "true" {
-		Configs.Port = 80
-	}
+{
+  "TwilioPhoneNumber":            <string>,
+  "AuthTokenValidForMins":        <int>,
+  "VerificationCodeValidForMins": <int>,
+  "AppName":                      <string>,
+  "EmailFromAddress":             <string>,
+  "EmailFromName":                <string>,
+  "VerificationEmailTemplateId":  <int>,
+  "Port":                         <int>
 }
 ```
 

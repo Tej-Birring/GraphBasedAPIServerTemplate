@@ -1,5 +1,5 @@
 # Don't include credentials!
-configs/*
+configs/.*
 
 # IDE stuff
 .idea
