@@ -23,7 +23,7 @@
 2. Create a `.jwkSigPairSet.json` file in `./configs`. \
     This will be the key that the server will use to sign (and verify) JWK tokens used for authentication. \
     You may create the key using [this tool.](https://mkjwk.org/).
-3. Create a `.env` file in `./configs`, specifying environment vars:
+3. Create a `.env` file in `./configs`, specifying environment vars: (OPTIONAL, you can always set these elsewhere i.e. Dockerfile or cloud platform e.g. AWS, Google Cloud, or Heroku)
    - NEO4J_URI — URI of the neo4j database.
    - NEO4J_USERNAME — Username to log into the neo4j database.
    - NEO4J_PASSWORD — Password to log into the neo4j database.
@@ -46,4 +46,30 @@
 }
 ```
 
+## Useful commands
+* To debug natively:
+```bash
+      $ go install # <- do once
+      $ go run *.go
+```
 
+* To build natively:
+```bash
+      $ go build
+      $ ./GraphBasedServer # <- run the built executable
+```
+
+* To build docker image
+```bash
+      $ ./build.sh
+```
+
+* To run docker image locally (for debug)
+```bash
+      $ ./debug.sh
+```
+
+* To deploy docker image
+```bash
+      $ ./deploy.sh
+```
