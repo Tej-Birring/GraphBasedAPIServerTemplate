@@ -2,24 +2,25 @@ package httpMiddleware
 
 import (
 	"encoding/json"
-	"github.com/julienschmidt/httprouter"
 	"net/http"
+	"strings"
 )
 
-func JSONOnly(handle httprouter.Handle) httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func JSONOnly(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// only write JSON
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.Header().Set("Accept", "application/json; charset=utf-8")
 		// only accept JSON requests
-		receivedContentType := r.Header.Get("Content-Type")
-		if receivedContentType != "application/json" {
+		receivedContentType := r.Header.Get("content-type")
+		if strings.Contains(receivedContentType, "application/json") != true {
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(map[string]interface{}{
-				"Reason": "This API only accepts and conveys JSON data!",
+				"Reason": "This API only speaks in JSON!",
 			})
 			return
 		}
 		// serve inner
-		handle(w, r, p)
-	}
+		h.ServeHTTP(w, r)
+	})
 }

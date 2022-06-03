@@ -14,8 +14,8 @@ import (
 )
 
 func HandleUserPhoneVerification(mux *httprouter.Router) {
-	mux.GET("/user/verifyPhone", JSONOnly(handleSendPhoneVerificationCode))
-	mux.POST("/user/verifyPhone", JSONOnly(handleConfirmPhoneVerification))
+	mux.GET("/user/verifyPhone", handleSendPhoneVerificationCode)
+	mux.POST("/user/verifyPhone", handleConfirmPhoneVerification)
 }
 
 var handleSendPhoneVerificationCode = NewAuthHandle(func(tknData *map[string]interface{}, userId string, r *http.Request, p httprouter.Params) AuthHandleResponse {

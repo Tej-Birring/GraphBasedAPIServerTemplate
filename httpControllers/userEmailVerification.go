@@ -14,8 +14,8 @@ import (
 )
 
 func HandleUserEmailVerification(mux *httprouter.Router) {
-	mux.GET("/user/verifyEmail", JSONOnly(handleSendEmailVerificationCode))
-	mux.POST("/user/verifyEmail", JSONOnly(handleConfirmEmailVerification))
+	mux.GET("/user/verifyEmail", handleSendEmailVerificationCode)
+	mux.POST("/user/verifyEmail", handleConfirmEmailVerification)
 }
 
 var handleSendEmailVerificationCode = NewAuthHandle(func(tknData *map[string]interface{}, userId string, r *http.Request, p httprouter.Params) AuthHandleResponse {

@@ -5,6 +5,7 @@ import (
 	"GraphBasedServer/configs"
 	"GraphBasedServer/db"
 	"GraphBasedServer/httpControllers"
+	. "GraphBasedServer/httpMiddleware"
 	"GraphBasedServer/messaging"
 	"fmt"
 	"github.com/julienschmidt/httprouter"
@@ -33,6 +34,7 @@ func main() {
 
 	// HANDLE ROUTES
 	mux := httprouter.New()
+
 	mux.GET("/", handleIndex)
 	httpControllers.HandleUserLogin(mux, &dbController)
 	httpControllers.HandleUserEmailVerification(mux)
@@ -41,7 +43,7 @@ func main() {
 	// START SERVER
 	port := configs.Configs.Port
 	log.Printf("Serving HTTP on port %d...\n", port)
-	err := http.ListenAndServe(fmt.Sprintf(":%d", port), mux)
+	err := http.ListenAndServe(fmt.Sprintf(":%d", port), HandleCors(JSONOnly(mux)))
 	if err != nil {
 		panic("Failed to run server!")
 	}

@@ -43,11 +43,11 @@ var _dbc *db.Controller
 */
 func HandleUserLogin(mux *httprouter.Router, dbController *db.Controller) {
 	_dbc = dbController
-	mux.POST("/user", JSONOnly(handleRegister))      // create
-	mux.POST("/login", JSONOnly(handleLogin))        // "read" #1 => starts user session by getting JWT (with expiry)
-	mux.GET("/login", JSONOnly(handleRefreshToken))  // "read" #2 => refreshes user session by getting new JWT (prevent session expiry)
-	mux.PATCH("/user", JSONOnly(handleUpdate))       // update user data
-	mux.POST("/user/delete", JSONOnly(handleDelete)) // delete user, POST method used because DELETE doesn't seem to include form data in some API clients — and password is required
+	mux.POST("/user", handleRegister)      // create
+	mux.POST("/login", handleLogin)        // "read" #1 => starts user session by getting JWT (with expiry)
+	mux.GET("/login", handleRefreshToken)  // "read" #2 => refreshes user session by getting new JWT (prevent session expiry)
+	mux.PATCH("/user", handleUpdate)       // update user data
+	mux.POST("/user/delete", handleDelete) // delete user, POST method used because DELETE doesn't seem to include form data in some API clients — and password is required
 }
 
 func respondWithUserAccountSuccess(w http.ResponseWriter, signedTkn []byte, userMessage string) {
