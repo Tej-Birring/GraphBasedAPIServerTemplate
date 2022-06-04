@@ -13,7 +13,7 @@ func JSONOnly(h http.Handler) http.Handler {
 		w.Header().Set("Accept", "application/json; charset=utf-8")
 		// only accept JSON requests
 		receivedContentType := r.Header.Get("content-type")
-		if strings.Contains(receivedContentType, "application/json") != true {
+		if r.Method != "GET" && strings.Contains(receivedContentType, "application/json") != true {
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(map[string]interface{}{
 				"Reason": "This API only speaks in JSON!",
