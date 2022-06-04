@@ -115,6 +115,10 @@ func handleRegister(w http.ResponseWriter, r *http.Request, _ httprouter.Params)
 	err = n.Create(_dbc)
 
 	if err != nil {
+		if db.IsThisDBError(&err, "Neo.ClientError.Schema.ConstraintValidationFailed") {
+			respondWithUserAccountError(w, http.StatusBadRequest, err.Error(), "The email address or phone number you have entered seems to have already been registered.")
+			return
+		}
 		respondWithUserAccountError(w, http.StatusInternalServerError, err.Error(), "Something went wrong while we were trying to register your account. Please contact us directly to resolve this issue.")
 		return
 	}
