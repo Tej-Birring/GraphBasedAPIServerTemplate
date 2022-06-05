@@ -9,7 +9,6 @@ import (
 	"github.com/lestrrat-go/jwx/jwa"
 	"github.com/lestrrat-go/jwx/jwk"
 	"github.com/lestrrat-go/jwx/jwt"
-	"os"
 	"time"
 )
 
@@ -46,10 +45,10 @@ func NewAuthToken(controller *db.Controller, id string, prvKey interface{}) ([]b
 	timeNow := time.Now()
 	timeExpire := timeNow.Add(authTokenDuration)
 	tknBuilder := jwt.NewBuilder().
-		Issuer(os.Getenv("APP_NAME") + " API Server").
+		Issuer(configs.Configs.AppName + " API Server").
 		IssuedAt(timeNow).
-		Audience([]string{os.Getenv("APP_NAME") + " App User"}).
-		Subject(os.Getenv("APP_NAME") + " Client-Side App").
+		Audience([]string{configs.Configs.AppName + " App User"}).
+		Subject(configs.Configs.AppName + " Client-Side App").
 		Expiration(timeExpire)
 
 	// append all user props apart from password and salt
