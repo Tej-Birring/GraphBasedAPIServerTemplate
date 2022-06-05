@@ -10,6 +10,7 @@ var c = cors.New(cors.Options{
 	AllowCredentials: true,
 	Debug:            false,
 	AllowedHeaders:   []string{"Content-Type", "Authorization"},
+	AllowedMethods:   []string{"GET", "POST", "PATCH"},
 })
 
 func HandleCors(h http.Handler) http.Handler {
