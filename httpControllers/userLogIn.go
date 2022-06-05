@@ -154,6 +154,16 @@ var handleUpdate = NewAuthHandle(func(tknData *map[string]interface{}, userId st
 	// omit fields that can only be set by this server
 	delete(req, "id")
 	delete(req, "salt")
+	delete(req, "emailVerified")
+	delete(req, "phoneVerified")
+
+	// if email or phone are being changed, make sure to reset the 'verified' status
+	if _, found := req["email"]; found {
+		req["emailVerified"] = false
+	}
+	if _, found := req["phone"]; found {
+		req["phoneVerified"] = false
+	}
 
 	// parse to JSON *only* to check input is of correct type for important fields, and below
 	tmp := UserAccountRequest{}
